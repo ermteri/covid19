@@ -28,16 +28,20 @@ class CovidStats:
     def print_graph(self, csv_reader):
         fig = plt.subplots()
         x = list()
-        y = list()
+        d = list()
+        c = list()
         for row in csv_reader:
             date_time_obj = datetime.datetime.strptime(row['dateRep'], '%d/%m/%Y')
             x.append(date_time_obj)
-            y.append(int(row['deaths']))
+            c.append(int(row['cases']))
+            d.append(int(row['deaths']))
         plt.xticks(rotation=90)
         plt.grid()
-        plt.plot(x[:len(x)-6], self.moving_average(y, 7))
+        plt.plot(x[:len(x)-6], self.moving_average(c, 7), label='cases')
+        plt.plot(x[:len(x)-6], self.moving_average(d, 7), label='deaths')
+        plt.title('Moving 7-days average')
+        plt.legend(loc='best')
         plt.show()
-        pass
 
 
 def run(args):
