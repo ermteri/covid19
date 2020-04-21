@@ -46,8 +46,11 @@ class CovidStats:
 
 def run(args):
     cs = CovidStats()
-    sweden = (row for row in cs.get_csv() if row['countriesAndTerritories'] == 'Sweden')
+    csv_reader = cs.get_csv()
+    sweden = (row for row in csv_reader if row['countriesAndTerritories'] == 'Sweden')
     cs.print_graph(sweden)
+    norge = (row for row in csv_reader if row['countriesAndTerritories'] == 'Norway')
+    cs.print_graph(norge)
 
 
 if __name__ == '__main__':
