@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import csv
 import datetime
 import matplotlib.pyplot as plt
@@ -37,20 +38,51 @@ class CovidStats:
             d.append(int(row['deaths']))
         plt.xticks(rotation=90)
         plt.grid()
-        plt.plot(x[:len(x)-6], self.moving_average(c, 7), label='cases')
-        plt.plot(x[:len(x)-6], self.moving_average(d, 7), label='deaths')
+        plt.plot(x[6:], self.moving_average(c, 7), label='cases')
+        plt.plot(x[6:], self.moving_average(d, 7), label='deaths')
         plt.title('Moving 7-days average')
         plt.legend(loc='best')
         plt.show()
 
+    def plot(self, country, csv_reader):
+        date_list = list()
+        death_list = list()
+        cases_list = list()
+        for row in csv_reader:
+            date_time_obj = datetime.datetime.strptime(row['dateRep'], '%d/%m/%Y')
+            date_list.append(date_time_obj)
+            cases_list.append(int(row['cases']))
+            death_list.append(int(row['deaths']))
+
+        fig, cases = plt.subplots()
+        # create the first y-axis
+        color = 'tab:blue'
+        cases.set_xlabel('Date (s)')
+        cases.set_ylabel('Cases', color=color)
+        cases.plot(date_list[:-6], self.moving_average(cases_list, 7), color=color)
+        cases.tick_params(axis='y', labelcolor=color)
+        cases.tick_params(axis='x', rotation=90)
+        # Create a second y-axis
+        death = cases.twinx()
+        color = 'tab:red'
+        death.set_ylabel('Death', color=color)
+        death.plot(date_list[:-6], self.moving_average(death_list, 7), color=color)
+        death.tick_params(axis='y', labelcolor=color)
+        # Show the plot
+        plt.title('Moving 7-days average for ' +  country)
+        fig.tight_layout()
+        plt.show()
+
 
 def run(args):
+    parser = argparse.ArgumentParser(description='Show corona stats moving ave 7 days.')
+    parser.add_argument('-c', '--country', type=str, required=True, help='the country in question')
+    args = parser.parse_args()
     cs = CovidStats()
+    print(args.country)
     csv_reader = cs.get_csv()
-    sweden = (row for row in csv_reader if row['countriesAndTerritories'] == 'Sweden')
-    cs.print_graph(sweden)
-    norge = (row for row in csv_reader if row['countriesAndTerritories'] == 'Norway')
-    cs.print_graph(norge)
+    country = (row for row in csv_reader if row['countriesAndTerritories'] == args.country)
+    cs.plot(args.country, country)
 
 
 if __name__ == '__main__':
