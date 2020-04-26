@@ -64,7 +64,7 @@ class CovidStats:
             trend_color = colors[i]
             i = i + 1
             y_ax.plot(self.moving_average(data[country], 7), color=trend_color, label=country)
-        plt.title('Moving average of {} per 1 million (from 1st {})'.format(kind, kind))
+        plt.title('7 days Moving average of {}/million (from 1st {})'.format(kind, kind))
         y_ax.legend(loc='upper left')
         fig.tight_layout()
         plt.show()
