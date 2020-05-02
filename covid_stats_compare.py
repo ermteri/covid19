@@ -29,7 +29,7 @@ class CovidStats:
         ret[n:] = ret[n:] - ret[:-n]
         return ret[n - 1:] / n
 
-    def get_ecdc_data(self, countries, kind):
+    def get_ecdc_data(self, countries, kind, use_population):
         '''
         Fetches csv data from ECDC
         :return:
@@ -45,12 +45,18 @@ class CovidStats:
                     found.append(line['countriesAndTerritories'])
                 if line['countriesAndTerritories'] in found:
                     if line['countriesAndTerritories'] in result:
-                        result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2018'])*1000000)
+                        if use_population:
+                            result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2018'])*1000000)
+                        else:
+                            result[line['countriesAndTerritories']].append(int(line[kind]))
                     else:
-                        result[line['countriesAndTerritories']] = [int(line[kind])/int(line['popData2018'])*1000000]
+                        if use_population:
+                            result[line['countriesAndTerritories']] = [int(line[kind])/int(line['popData2018'])*1000000]
+                        else:
+                            result[line['countriesAndTerritories']] = [int(line[kind])]
         return result
 
-    def plot(self, data, kind):
+    def plot(self, data, kind, use_population):
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         fig, y_ax = plt.subplots()
         y_ax.set_xlabel('Days')
@@ -64,7 +70,10 @@ class CovidStats:
             trend_color = colors[i]
             i = i + 1
             y_ax.plot(self.moving_average(data[country], 7), color=trend_color, label=country)
-        plt.title('7 days Moving average of {}/million (from 1st {})'.format(kind, kind))
+        if use_population:
+            plt.title('7 days Moving average of {}/million (from 1st {})'.format(kind, kind))
+        else:
+            plt.title('7 days Moving average of {} (from 1st {})'.format(kind, kind))
         y_ax.legend(loc='upper left')
         fig.tight_layout()
         plt.show()
@@ -72,13 +81,18 @@ class CovidStats:
 
 def run(args):
     parser = argparse.ArgumentParser(description='Compares corona trends for a selected countries.')
-    parser.add_argument('-c', '--countries', nargs='+', metavar='S', required=True, help='Countries in question')
-    parser.add_argument('-k', '--kind', type=str, required=True, help="Kind of graph, deaths or cases")
+    parser.add_argument('-c', '--countries', nargs='+', metavar='S', required=True,
+                        help='Countries in question')
+    parser.add_argument('-k', '--kind', type=str, required=True,
+                        help="Kind of graph, deaths or cases")
+    parser.add_argument('-p', '--population', action='store_true', default=False,
+                        help="Compare relative to population")
+
     args = parser.parse_args()
     cs = CovidStats()
-    data = cs.get_ecdc_data(args.countries, args.kind)
+    data = cs.get_ecdc_data(args.countries, args.kind, args.population)
     # print(json.dumps(data, indent=4))
-    cs.plot(data, args.kind)
+    cs.plot(data, args.kind, args.population)
 
 
 if __name__ == '__main__':
