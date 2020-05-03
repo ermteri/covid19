@@ -27,7 +27,7 @@ class CovidStats:
         req = requests.get(self.csv_url)
         return csv.DictReader(req.text.splitlines())
 
-    def plot_one(self, country, csv_reader, kind):
+    def plot_one(self, country, csv_reader, kind, use_population):
         x = list()
         y = list()
         first_found = False
@@ -40,7 +40,10 @@ class CovidStats:
                     first_found = True
             date_time_obj = datetime.datetime.strptime(row['dateRep'], '%d/%m/%Y')
             x.append(date_time_obj)
-            y.append(int(row[kind])/int(row['popData2018'])*1000000)
+            if use_population:
+                y.append(int(row[kind])/int(row['popData2018'])*1000000)
+            else:
+                y.append(int(row[kind]))
         fig, y_ax = plt.subplots()
         trend_color = 'darkblue'
         bar_color = 'tab:blue'
@@ -50,7 +53,10 @@ class CovidStats:
         y_ax.bar(x, y, color=bar_color)
         y_ax.tick_params(axis='y', labelcolor=bar_color)
         y_ax.tick_params(axis='x', rotation=90)
-        plt.title('Number of {} per 1 million in {} (from 1st {})'.format(kind, country, kind))
+        if use_population:
+            plt.title('Number of {} per 1 million in {} (from 1st {})'.format(kind, country, kind))
+        else:
+            plt.title('Number of {} in {} (from 1st {})'.format(kind, country, kind))
         y_ax.legend(loc='upper left')
         fig.tight_layout()
         plt.show()
@@ -60,11 +66,13 @@ def run(args):
     parser = argparse.ArgumentParser(description='Show corona stats for a selected country.')
     parser.add_argument('-c', '--country', type=str, required=True, help='Country in question')
     parser.add_argument('-k', '--kind', type=str, required=True, help="Kind of graph, deaths or cases")
+    parser.add_argument('-p', '--population', action='store_true', default=False,
+                        help="Compare relative to population")
     args = parser.parse_args()
     cs = CovidStats()
     csv_reader = cs.get_csv()
     country = (row for row in csv_reader if row['countriesAndTerritories'] == args.country)
-    cs.plot_one(args.country, country, args.kind)
+    cs.plot_one(args.country, country, args.kind, args.population)
 
 
 if __name__ == '__main__':
