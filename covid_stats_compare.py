@@ -29,9 +29,32 @@ class CovidStats:
         ret[n:] = ret[n:] - ret[:-n]
         return ret[n - 1:] / n
 
+    def get_ecdc_data_total(self, countries, kind, use_population):
+        '''
+        Fetches csv data from ECDC from 2019-12-31
+        :return:
+        {"country1":[12, 13, 1, 0]}
+        '''
+        csv_reader = self.get_csv()
+        result = defaultdict(list)
+        # Reversed since in the csv from ECDC, latest is first in the list
+        for line in reversed(list(csv_reader)):
+            if line['countriesAndTerritories'] in countries:
+                if line['countriesAndTerritories'] in result:
+                    if use_population:
+                        result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2018'])*1000000)
+                    else:
+                        result[line['countriesAndTerritories']].append(int(line[kind]))
+                else:
+                    if use_population:
+                        result[line['countriesAndTerritories']] = [int(line[kind]) / int(line['popData2018']) * 1000000]
+                    else:
+                        result[line['countriesAndTerritories']] = [int(line[kind])]
+        return result
+
     def get_ecdc_data(self, countries, kind, use_population):
         '''
-        Fetches csv data from ECDC
+        Fetches csv data from ECDC from 1 case
         :return:
         {"country1":[12, 13, 1, 0]}
         '''
@@ -56,7 +79,7 @@ class CovidStats:
                             result[line['countriesAndTerritories']] = [int(line[kind])]
         return result
 
-    def plot(self, data, kind, use_population):
+    def plot(self, data, kind, use_population, total):
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         fig, y_ax = plt.subplots()
         y_ax.set_xlabel('Days')
@@ -70,10 +93,14 @@ class CovidStats:
             trend_color = colors[i]
             i = i + 1
             y_ax.plot(self.moving_average(data[country], 7), color=trend_color, label=country)
-        if use_population:
-            plt.title('7 days Moving average of {}/million (from 1st {})'.format(kind, kind))
+        if total:
+            from_part = '2019-12-31'
         else:
-            plt.title('7 days Moving average of {} (from 1st {})'.format(kind, kind))
+            from_part = '1st {}'.format(kind)
+        if use_population:
+            plt.title('7 days Moving average of {}/million (from {})'.format(kind, from_part))
+        else:
+            plt.title('7 days Moving average of {} (from {})'.format(kind, from_part))
         y_ax.legend(loc='upper left')
         fig.tight_layout()
         plt.show()
@@ -87,12 +114,17 @@ def run(args):
                         help="Kind of graph, deaths or cases")
     parser.add_argument('-p', '--population', action='store_true', default=False,
                         help="Compare relative to population")
+    parser.add_argument('-t', '--total', action='store_true', default=False,
+                        help="If total data from 2019-12-31 should be used")
 
     args = parser.parse_args()
     cs = CovidStats()
-    data = cs.get_ecdc_data(args.countries, args.kind, args.population)
+    if args.total:
+        data = cs.get_ecdc_data_total(args.countries, args.kind, args.population)
+    else:
+        data = cs.get_ecdc_data(args.countries, args.kind, args.population)
     # print(json.dumps(data, indent=4))
-    cs.plot(data, args.kind, args.population)
+    cs.plot(data, args.kind, args.population, args.total)
 
 
 if __name__ == '__main__':
