@@ -11,7 +11,7 @@ import sys
 ECDC_URL = 'https://opendata.ecdc.europa.eu/covid19/casedistribution/csv'
 # URL above use these fields =
 # ['dateRep', 'day', 'month', 'year', 'cases', 'deaths', 'countriesAndTerritories',
-# 'geoId', 'countryterritoryCode', 'popData2018', 'continentExp']
+# 'geoId', 'countryterritoryCode', 'popData2019', 'continentExp']
 
 
 class CovidStats:
@@ -41,7 +41,7 @@ class CovidStats:
             date_time_obj = datetime.datetime.strptime(row['dateRep'], '%d/%m/%Y')
             x.append(date_time_obj)
             if use_population:
-                y.append(int(row[kind])/int(row['popData2018'])*1000000)
+                y.append(int(row[kind])/int(row['popData2019'])*1000000)
             else:
                 y.append(int(row[kind]))
         fig, y_ax = plt.subplots()

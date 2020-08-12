@@ -42,12 +42,12 @@ class CovidStats:
             if line['countriesAndTerritories'] in countries:
                 if line['countriesAndTerritories'] in result:
                     if use_population:
-                        result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2018'])*1000000)
+                        result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2019'])*1000000)
                     else:
                         result[line['countriesAndTerritories']].append(int(line[kind]))
                 else:
                     if use_population:
-                        result[line['countriesAndTerritories']] = [int(line[kind]) / int(line['popData2018']) * 1000000]
+                        result[line['countriesAndTerritories']] = [int(line[kind]) / int(line['popData2019']) * 1000000]
                     else:
                         result[line['countriesAndTerritories']] = [int(line[kind])]
         return result
@@ -69,12 +69,12 @@ class CovidStats:
                 if line['countriesAndTerritories'] in found:
                     if line['countriesAndTerritories'] in result:
                         if use_population:
-                            result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2018'])*1000000)
+                            result[line['countriesAndTerritories']].append(int(line[kind])/int(line['popData2019'])*1000000)
                         else:
                             result[line['countriesAndTerritories']].append(int(line[kind]))
                     else:
                         if use_population:
-                            result[line['countriesAndTerritories']] = [int(line[kind])/int(line['popData2018'])*1000000]
+                            result[line['countriesAndTerritories']] = [int(line[kind])/int(line['popData2019'])*1000000]
                         else:
                             result[line['countriesAndTerritories']] = [int(line[kind])]
         return result
